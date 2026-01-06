@@ -1,14 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
 declare global {
   var prisma: PrismaClient | undefined;
 }

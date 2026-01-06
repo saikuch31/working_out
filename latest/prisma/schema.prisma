@@ -7,16 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model WorkoutEntry {
+model Workout {
   id        String   @id @default(cuid())
   date      DateTime
   title     String   // e.g. "Push day", "Run"
-  sets      Int? // number of sets
-  reps      Int? // number of reps per sets
-  weight    Int? // weight per rep
-  totalWeight Int? // total weight, calculated as sets * reps * weight
   category  String   // e.g. "Strength", "Cardio", "Yoga"
   duration  Int?     // minutes (optional)
   notes     String?  // optional
   createdAt DateTime @default(now())
+  exercises Exercise[] // relation to exercises
+}
+
+model Exercise {
+  id         String  @id @default(cuid())
+  workoutId  String  // foreign key to Workout
+  workout    Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  name       String  // e.g. "Bench Press", "Incline Press"
+  sets       Int?    // number of sets
+  reps       Int?    // number of reps per set
+  weight     Int?    // weight per rep
+  totalWeight Int?   // total weight, calculated as sets * reps * weight
 }
