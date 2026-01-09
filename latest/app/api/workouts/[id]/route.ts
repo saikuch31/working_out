@@ -56,14 +56,14 @@ function normalizeExercises(input: unknown) {
   return input as ExerciseInput[];
 }
 
-type RouteParams = {
-  params: {
+type RouteContext = {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
-export async function PUT(request: Request, { params }: RouteParams) {
-  const { id } = params;
+export async function PUT(request: Request, context: RouteContext) {
+  const { id } = await context.params;
 
   try {
     const body = await request.json();
@@ -130,8 +130,8 @@ export async function PUT(request: Request, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(_request: Request, { params }: RouteParams) {
-  const { id } = params;
+export async function DELETE(_request: Request, context: RouteContext) {
+  const { id } = await context.params;
 
   try {
     const deleted = await prisma.workout.delete({

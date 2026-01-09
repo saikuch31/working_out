@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Intensity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model Workout {
   id        String   @id @default(cuid())
   date      DateTime
@@ -34,4 +40,14 @@ model Tag {
   id       String    @id @default(cuid())
   name     String    @unique
   workouts Workout[]
+}
+
+model SportSession {
+  id        String     @id @default(cuid())
+  date      DateTime
+  title     String     // e.g. "Pickup basketball"
+  duration  Int?       // minutes (optional)
+  intensity Intensity
+  notes     String?    // optional
+  createdAt DateTime   @default(now())
 }

@@ -6,6 +6,8 @@ type WorkoutListProps = {
   workouts: WorkoutEntry[];
   isLoading: boolean;
   error: string | null;
+  onEdit?: (workout: WorkoutEntry) => void;
+  onDelete?: (workout: WorkoutEntry) => void;
 };
 
 function formatDate(dateString: string) {
@@ -14,7 +16,7 @@ function formatDate(dateString: string) {
   return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(date);
 }
 
-export default function WorkoutList({ workouts, isLoading, error }: WorkoutListProps) {
+export default function WorkoutList({ workouts, isLoading, error, onEdit, onDelete }: WorkoutListProps) {
   return (
     <section>
       <h2>Workouts</h2>
@@ -49,6 +51,10 @@ export default function WorkoutList({ workouts, isLoading, error }: WorkoutListP
             </div>
             {workout.duration != null ? <div>Duration: {workout.duration} min</div> : null}
             {workout.notes ? <div>Notes: {workout.notes}</div> : null}
+            <div>
+              {onEdit && <button onClick={() => onEdit(workout)}>Edit</button>}
+              {onDelete && <button onClick={() => onDelete(workout)}>Delete</button>}
+            </div>
           </li>
         ))}
       </ul>
