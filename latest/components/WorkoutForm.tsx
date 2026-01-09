@@ -15,6 +15,11 @@ export type ExerciseEntry = {
   totalWeight: number | null;
 };
 
+export type TagEntry = {
+  id: string;
+  name: string;
+};
+
 export type WorkoutEntry = {
   id: string;
   date: string;
@@ -24,6 +29,7 @@ export type WorkoutEntry = {
   notes: string | null;
   createdAt: string;
   exercises: ExerciseEntry[];
+  tags: TagEntry[];
 };
 
 type ExerciseFormState = {
@@ -40,6 +46,7 @@ type FormState = {
   duration: string;
   notes: string;
   exercises: ExerciseFormState[];
+  tagsInput: string;
 };
 
 const initialFormState: FormState = {
@@ -49,6 +56,7 @@ const initialFormState: FormState = {
   duration: "",
   notes: "",
   exercises: [{ name: "", sets: "", reps: "", weight: "" }],
+  tagsInput: "",
 };
 
 function toNumberOrNull(value: string) {
@@ -57,10 +65,55 @@ function toNumberOrNull(value: string) {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
+const TAG_KEYWORDS: Record<string, string> = {
+  back: "back",
+  biceps: "biceps",
+  chest: "chest",
+  triceps: "triceps",
+  legs: "legs",
+  leg: "legs",
+  shoulders: "shoulders",
+  shoulder: "shoulders",
+  delts: "shoulders",
+  core: "core",
+  abs: "abs",
+  glutes: "glutes",
+  quads: "quads",
+  hamstrings: "hamstrings",
+  calves: "calves",
+  cardio: "cardio",
+};
+
+function inferTagsFromTitle(title: string) {
+  const tokens = title
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .split(/[^a-z]+/)
+    .filter(Boolean);
+  const found = new Set<string>();
+  tokens.forEach((token) => {
+    const tag = TAG_KEYWORDS[token];
+    if (tag) found.add(tag);
+  });
+  return Array.from(found);
+}
+
+function parseTagsInput(tagsInput: string) {
+  return Array.from(
+    new Set(
+      tagsInput
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0)
+    )
+  );
+}
+
 export default function WorkoutForm({ onCreated }: WorkoutFormProps) {
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasEditedTags, setHasEditedTags] = useState(false);
 
   const exerciseTotals = useMemo(() => {
     return formState.exercises.map((exercise) => {
@@ -71,6 +124,8 @@ export default function WorkoutForm({ onCreated }: WorkoutFormProps) {
       return sets * reps * weight;
     });
   }, [formState.exercises]);
+
+  const inferredTags = useMemo(() => inferTagsFromTitle(formState.title), [formState.title]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -98,6 +153,7 @@ export default function WorkoutForm({ onCreated }: WorkoutFormProps) {
         duration: toNumberOrNull(formState.duration),
         notes: formState.notes.trim() || null,
         exercises,
+        tags: parseTagsInput(formState.tagsInput),
       };
 
       const response = await fetch("/api/workouts", {
@@ -114,6 +170,7 @@ export default function WorkoutForm({ onCreated }: WorkoutFormProps) {
       const created = (await response.json()) as WorkoutEntry;
       onCreated(created);
       setFormState(initialFormState);
+      setHasEditedTags(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error");
     } finally {
@@ -123,7 +180,23 @@ export default function WorkoutForm({ onCreated }: WorkoutFormProps) {
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = event.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
+    setFormState((prev) => {
+      if (name !== "title") {
+        return { ...prev, [name]: value };
+      }
+
+      const nextTitle = value;
+      if (hasEditedTags) {
+        return { ...prev, title: nextTitle };
+      }
+
+      const suggested = inferTagsFromTitle(nextTitle).join(", ");
+      return {
+        ...prev,
+        title: nextTitle,
+        tagsInput: suggested,
+      };
+    });
   }
 
   function handleExerciseChange(
@@ -190,6 +263,36 @@ export default function WorkoutForm({ onCreated }: WorkoutFormProps) {
             required
           />
         </label>
+        <label>
+          Tags (comma-separated)
+          <input
+            type="text"
+            name="tagsInput"
+            value={formState.tagsInput}
+            onChange={(event) => {
+              setHasEditedTags(true);
+              handleChange(event);
+            }}
+            placeholder="back, biceps"
+          />
+        </label>
+        {inferredTags.length > 0 && hasEditedTags ? (
+          <div>
+            <span>Suggested from title: {inferredTags.join(", ")}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setFormState((prev) => ({
+                  ...prev,
+                  tagsInput: inferredTags.join(", "),
+                }));
+                setHasEditedTags(false);
+              }}
+            >
+              Use suggested
+            </button>
+          </div>
+        ) : null}
         <fieldset>
           <legend>Exercises</legend>
           {formState.exercises.map((exercise, index) => (

@@ -9,6 +9,8 @@ type ExerciseInput = {
   totalWeight?: number | null;
 };
 
+type TagInput = string;
+
 function computeTotalWeight(sets?: number | null, reps?: number | null, weight?: number | null) {
   if (sets == null || reps == null || weight == null) return null;
   return sets * reps * weight;
@@ -26,6 +28,25 @@ function mapExercises(exercises: ExerciseInput[] | undefined) {
   }));
 }
 
+function normalizeTags(input: unknown) {
+  if (input == null) return undefined;
+  if (!Array.isArray(input)) return null;
+  const tags = input
+    .filter((item) => typeof item === "string")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+  if (tags.length === 0) return [];
+  return Array.from(new Set(tags));
+}
+
+function mapTags(tags: TagInput[] | undefined) {
+  if (!tags || tags.length === 0) return undefined;
+  return tags.map((name) => ({
+    where: { name },
+    create: { name },
+  }));
+}
+
 function normalizeExercises(input: unknown) {
   if (input == null) return undefined;
   if (!Array.isArray(input)) return null;
@@ -38,7 +59,7 @@ function normalizeExercises(input: unknown) {
 export async function GET() {
   try {
     const workouts = await prisma.workout.findMany({
-      include: { exercises: true },
+      include: { exercises: true, tags: true },
       orderBy: { date: "desc" },
     });
     return NextResponse.json(workouts);
@@ -52,6 +73,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { date, title, category, duration, notes } = body ?? {};
     const exercises = normalizeExercises(body?.exercises);
+    const tags = normalizeTags(body?.tags);
 
     if (!date || !title || !category) {
       return NextResponse.json(
@@ -67,6 +89,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (tags === null) {
+      return NextResponse.json(
+        { error: "tags must be an array of strings" },
+        { status: 400 }
+      );
+    }
+
     const created = await prisma.workout.create({
       data: {
         date: new Date(date),
@@ -77,8 +106,13 @@ export async function POST(request: Request) {
         exercises: {
           create: mapExercises(exercises),
         },
+        tags: mapTags(tags)
+          ? {
+              connectOrCreate: mapTags(tags),
+            }
+          : undefined,
       },
-      include: { exercises: true },
+      include: { exercises: true, tags: true },
     });
 
     return NextResponse.json(created, { status: 201 });

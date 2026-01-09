@@ -26,6 +26,9 @@ export default function WorkoutList({ workouts, isLoading, error }: WorkoutListP
           <li key={workout.id}>
             <strong>{workout.title}</strong> ({workout.category}) -{" "}
             {formatDate(workout.date)}
+            {workout.tags.length > 0 ? (
+              <div>Tags: {workout.tags.map((tag) => tag.name).join(", ")}</div>
+            ) : null}
             <div>
               {workout.exercises.length === 0 ? (
                 <div>No exercises</div>
