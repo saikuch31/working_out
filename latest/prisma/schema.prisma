@@ -51,3 +51,9 @@ model SportSession {
   notes     String?    // optional
   createdAt DateTime   @default(now())
 }
+
+model RestDay {
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  createdAt DateTime @default(now())
+}

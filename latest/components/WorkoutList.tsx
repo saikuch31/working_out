@@ -18,27 +18,65 @@ function formatDate(dateString: string) {
 
 export default function WorkoutList({ workouts, isLoading, error, onEdit, onDelete }: WorkoutListProps) {
   return (
-    <section>
-      <h2>Workouts</h2>
-      {isLoading ? <p>Loading...</p> : null}
-      {error ? <p role="alert">{error}</p> : null}
-      {!isLoading && workouts.length === 0 ? <p>No workouts yet.</p> : null}
-      <ul>
+    <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur">
+      <h2 className="text-xl font-semibold text-slate-900">Workouts</h2>
+      {isLoading ? <p className="mt-3 text-sm text-slate-600">Loading...</p> : null}
+      {error ? (
+        <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          {error}
+        </p>
+      ) : null}
+      {!isLoading && workouts.length === 0 ? (
+        <p className="mt-3 text-sm text-slate-600">No workouts yet.</p>
+      ) : null}
+      <ul className="mt-5 grid gap-4">
         {workouts.map((workout) => (
-          <li key={workout.id}>
-            <strong>{workout.title}</strong> ({workout.category}) -{" "}
-            {formatDate(workout.date)}
+          <li
+            key={workout.id}
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <strong className="text-base text-slate-900">{workout.title}</strong>{" "}
+                <span className="text-sm text-slate-600">({workout.category})</span>
+                <div className="text-sm text-slate-600">{formatDate(workout.date)}</div>
+              </div>
+              <div className="flex gap-2">
+                {onEdit && (
+                  <button
+                    onClick={() => onEdit(workout)}
+                    className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 hover:border-slate-400"
+                  >
+                    Edit
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={() => onDelete(workout)}
+                    className="rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-700 hover:border-rose-300"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </div>
             {workout.tags.length > 0 ? (
-              <div>Tags: {workout.tags.map((tag) => tag.name).join(", ")}</div>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {workout.tags.map((tag) => (
+                  <span key={tag.id} className="rounded-full border border-slate-200 px-2 py-0.5">
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
             ) : null}
-            <div>
+            <div className="mt-3">
               {workout.exercises.length === 0 ? (
-                <div>No exercises</div>
+                <div className="text-sm text-slate-500">No exercises</div>
               ) : (
-                <ol>
+                <ol className="grid gap-2 text-sm text-slate-700">
                   {workout.exercises.map((exercise) => (
                     <li key={exercise.id}>
-                      {exercise.name}
+                      <span className="font-medium text-slate-900">{exercise.name}</span>
                       {exercise.sets != null && exercise.reps != null
                         ? ` - ${exercise.sets} sets x ${exercise.reps} reps`
                         : ""}
@@ -49,11 +87,9 @@ export default function WorkoutList({ workouts, isLoading, error, onEdit, onDele
                 </ol>
               )}
             </div>
-            {workout.duration != null ? <div>Duration: {workout.duration} min</div> : null}
-            {workout.notes ? <div>Notes: {workout.notes}</div> : null}
-            <div>
-              {onEdit && <button onClick={() => onEdit(workout)}>Edit</button>}
-              {onDelete && <button onClick={() => onDelete(workout)}>Delete</button>}
+            <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-600">
+              {workout.duration != null ? <span>Duration: {workout.duration} min</span> : null}
+              {workout.notes ? <span>Notes: {workout.notes}</span> : null}
             </div>
           </li>
         ))}

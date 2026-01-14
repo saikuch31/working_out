@@ -347,10 +347,15 @@ export default function WorkoutForm({ onCreated, onUpdated, editingWorkout }: Wo
   }
 
   return (
-    <section>
-      <h2>{editingWorkout ? 'Edit Workout' : 'Add Workout'}</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
+    <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur">
+      <h2 className="text-xl font-semibold text-slate-900">
+        {editingWorkout ? "Edit Workout" : "Add Workout"}
+      </h2>
+      <p className="mt-1 text-sm text-slate-600">
+        Track lifts, attach tags, and keep notes in one place.
+      </p>
+      <form className="mt-5 grid gap-4" onSubmit={handleSubmit}>
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           Date
           <input
             type="date"
@@ -358,9 +363,10 @@ export default function WorkoutForm({ onCreated, onUpdated, editingWorkout }: Wo
             value={formState.date}
             onChange={handleChange}
             required
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           Title
           <input
             type="text"
@@ -369,9 +375,10 @@ export default function WorkoutForm({ onCreated, onUpdated, editingWorkout }: Wo
             onChange={handleChange}
             placeholder="Push day"
             required
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           Category
           <input
             type="text"
@@ -380,9 +387,10 @@ export default function WorkoutForm({ onCreated, onUpdated, editingWorkout }: Wo
             onChange={handleChange}
             placeholder="Strength"
             required
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           Tags (comma-separated)
           <input
             type="text"
@@ -393,10 +401,11 @@ export default function WorkoutForm({ onCreated, onUpdated, editingWorkout }: Wo
               handleChange(event);
             }}
             placeholder="back, biceps"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
           />
         </label>
         {inferredTags.length > 0 && hasEditedTags ? (
-          <div>
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600">
             <span>Suggested from exercises: {inferredTags.join(", ")}</span>
             <button
               type="button"
@@ -407,16 +416,20 @@ export default function WorkoutForm({ onCreated, onUpdated, editingWorkout }: Wo
                 }));
                 setHasEditedTags(false);
               }}
+              className="ml-3 inline-flex items-center rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 hover:border-slate-400"
             >
               Use suggested
             </button>
           </div>
         ) : null}
-        <fieldset>
-          <legend>Exercises</legend>
+        <fieldset className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <legend className="px-2 text-sm font-semibold text-slate-700">Exercises</legend>
           {formState.exercises.map((exercise, index) => (
-            <div key={`exercise-${index}`}>
-              <label>
+            <div
+              key={`exercise-${index}`}
+              className="mt-4 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            >
+              <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
                 Exercise name
                 <input
                   type="text"
@@ -424,9 +437,10 @@ export default function WorkoutForm({ onCreated, onUpdated, editingWorkout }: Wo
                   value={exercise.name}
                   onChange={(event) => handleExerciseChange(index, event)}
                   placeholder="Bench Press"
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                 />
               </label>
-              <label>
+              <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
                 Sets
                 <input
                   type="number"
@@ -434,9 +448,10 @@ export default function WorkoutForm({ onCreated, onUpdated, editingWorkout }: Wo
                   value={exercise.sets}
                   onChange={(event) => handleExerciseChange(index, event)}
                   min={0}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                 />
               </label>
-              <label>
+              <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
                 Reps
                 <input
                   type="number"
@@ -444,9 +459,10 @@ export default function WorkoutForm({ onCreated, onUpdated, editingWorkout }: Wo
                   value={exercise.reps}
                   onChange={(event) => handleExerciseChange(index, event)}
                   min={0}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                 />
               </label>
-              <label>
+              <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
                 Weight
                 <input
                   type="number"
@@ -454,21 +470,30 @@ export default function WorkoutForm({ onCreated, onUpdated, editingWorkout }: Wo
                   value={exercise.weight}
                   onChange={(event) => handleExerciseChange(index, event)}
                   min={0}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                 />
               </label>
-              <div>
+              <div className="text-sm text-slate-600">
                 <strong>Exercise Total:</strong> {exerciseTotals[index] ?? "—"}
               </div>
-              <button type="button" onClick={() => removeExercise(index)}>
+              <button
+                type="button"
+                onClick={() => removeExercise(index)}
+                className="inline-flex w-fit items-center rounded-full border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-700 hover:border-rose-300"
+              >
                 Remove exercise
               </button>
             </div>
           ))}
-          <button type="button" onClick={addExercise}>
+          <button
+            type="button"
+            onClick={addExercise}
+            className="mt-4 inline-flex items-center rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-400"
+          >
             Add exercise
           </button>
         </fieldset>
-        <label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           Duration (minutes)
           <input
             type="number"
@@ -476,20 +501,36 @@ export default function WorkoutForm({ onCreated, onUpdated, editingWorkout }: Wo
             value={formState.duration}
             onChange={handleChange}
             min={0}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           Notes
           <textarea
             name="notes"
             value={formState.notes}
             onChange={handleChange}
             rows={3}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
           />
         </label>
-        {error ? <p role="alert">{error}</p> : null}
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (editingWorkout ? "Updating..." : "Saving...") : (editingWorkout ? "Update workout" : "Save workout")}
+        {error ? (
+          <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            {error}
+          </p>
+        ) : null}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isSubmitting
+            ? editingWorkout
+              ? "Updating..."
+              : "Saving..."
+            : editingWorkout
+            ? "Update workout"
+            : "Save workout"}
         </button>
       </form>
     </section>

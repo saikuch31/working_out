@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type SportSession = {
   id: string;
@@ -14,6 +14,8 @@ export type SportSession = {
 
 type SportFormProps = {
   onCreated: (session: SportSession) => void;
+  onUpdated?: (session: SportSession) => void;
+  editingSession?: SportSession | null;
 };
 
 type FormState = {
@@ -38,10 +40,24 @@ function toNumberOrNull(value: string) {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
-export default function SportForm({ onCreated }: SportFormProps) {
+export default function SportForm({ onCreated, onUpdated, editingSession }: SportFormProps) {
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (editingSession) {
+      setFormState({
+        date: editingSession.date.split("T")[0],
+        title: editingSession.title,
+        duration: editingSession.duration?.toString() ?? "",
+        intensity: editingSession.intensity,
+        notes: editingSession.notes ?? "",
+      });
+    } else {
+      setFormState(initialFormState);
+    }
+  }, [editingSession]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,19 +73,26 @@ export default function SportForm({ onCreated }: SportFormProps) {
         notes: formState.notes.trim() || null,
       };
 
-      const response = await fetch("/api/sports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        editingSession ? `/api/sports/${editingSession.id}` : "/api/sports",
+        {
+          method: editingSession ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) {
         const message = await response.json();
         throw new Error(message?.error ?? "Failed to create sports session");
       }
 
-      const created = (await response.json()) as SportSession;
-      onCreated(created);
+      const result = (await response.json()) as SportSession;
+      if (editingSession) {
+        onUpdated?.(result);
+      } else {
+        onCreated(result);
+      }
       setFormState(initialFormState);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error");
@@ -86,10 +109,13 @@ export default function SportForm({ onCreated }: SportFormProps) {
   }
 
   return (
-    <section>
-      <h2>Add Sport Session</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
+    <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur">
+      <h2 className="text-xl font-semibold text-slate-900">
+        {editingSession ? "Edit Sport Session" : "Add Sport Session"}
+      </h2>
+      <p className="mt-1 text-sm text-slate-600">Log sports you play instead of lifting.</p>
+      <form className="mt-5 grid gap-4" onSubmit={handleSubmit}>
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           Date
           <input
             type="date"
@@ -97,9 +123,10 @@ export default function SportForm({ onCreated }: SportFormProps) {
             value={formState.date}
             onChange={handleChange}
             required
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           Title
           <input
             type="text"
@@ -108,9 +135,10 @@ export default function SportForm({ onCreated }: SportFormProps) {
             onChange={handleChange}
             placeholder="Pickup basketball"
             required
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           Duration (minutes)
           <input
             type="number"
@@ -118,23 +146,49 @@ export default function SportForm({ onCreated }: SportFormProps) {
             value={formState.duration}
             onChange={handleChange}
             min={0}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           Intensity
-          <select name="intensity" value={formState.intensity} onChange={handleChange}>
+          <select
+            name="intensity"
+            value={formState.intensity}
+            onChange={handleChange}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+          >
             <option value="LOW">Low</option>
             <option value="MEDIUM">Medium</option>
             <option value="HIGH">High</option>
           </select>
         </label>
-        <label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
           Notes
-          <textarea name="notes" value={formState.notes} onChange={handleChange} rows={3} />
+          <textarea
+            name="notes"
+            value={formState.notes}
+            onChange={handleChange}
+            rows={3}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+          />
         </label>
-        {error ? <p role="alert">{error}</p> : null}
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Save session"}
+        {error ? (
+          <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            {error}
+          </p>
+        ) : null}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isSubmitting
+            ? editingSession
+              ? "Updating..."
+              : "Saving..."
+            : editingSession
+            ? "Update session"
+            : "Save session"}
         </button>
       </form>
     </section>
