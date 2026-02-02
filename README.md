@@ -25,3 +25,5 @@ day 5 -- i updated the ui drastically, and now i'm able to edit and delete worko
 day 7 -- i added a workout streak counter and an activity streak counter, and i also decided to store past workouts on a different page so the dashboard is less cluttered. also decided to update the dashboard ui once again, activity heatmap per month, and updated ui to input an activity. 
 
 day 8 -- dark mode. LGTM
+
+day 9 -- moved back to school, gave up on things, fell off even more horrifically, but we're back now. the workout pie chart thing sucks, so i removed it. added edit capabilities for the sport sessions 
