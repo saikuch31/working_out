@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import SportForm, { type SportSession } from "@/components/SportForm";
 import SportList from "@/components/SportList";
@@ -147,9 +148,31 @@ export default function HistoryPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-slate-100">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-10">
-        <header>
-          <h1 className="text-3xl font-semibold text-slate-900">Activity History</h1>
-          <p className="mt-2 text-sm text-slate-600">Review and edit workouts and sports.</p>
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-slate-900">Activity History</h1>
+            <p className="mt-2 text-sm text-slate-600">Review and edit workouts and sports.</p>
+          </div>
+          <Link
+            href="/dashboard"
+            aria-label="Back to dashboard"
+            className="rounded-full border border-slate-300 p-2 text-slate-700 hover:border-slate-400"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="h-6 w-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+              />
+            </svg>
+          </Link>
         </header>
 
         <div className="flex flex-wrap gap-3">

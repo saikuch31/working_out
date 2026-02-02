@@ -157,6 +157,8 @@ export default function DashboardPage() {
   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
   const [isSportModalOpen, setIsSportModalOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
+  const [editingSession, setEditingSession] = useState<SportSession | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -297,6 +299,23 @@ export default function DashboardPage() {
     setIsSportModalOpen(false);
   }
 
+  function handleSportUpdated(updatedSession: SportSession) {
+    setSessions((prev) =>
+      prev.map((session) => (session.id === updatedSession.id ? updatedSession : session))
+    );
+    setEditingSession(null);
+    setIsSportModalOpen(false);
+  }
+
+  function handleSportEdit(session: SportSession) {
+    setEditingSession(session);
+    setIsSportModalOpen(true);
+  }
+
+  function handleSportCancelEdit() {
+    setEditingSession(null);
+  }
+
   const workoutDates = new Set(workouts.map((workout) => toDateKeyUTC(new Date(workout.date))));
   const activityDates = new Set([
     ...workoutDates,
@@ -314,6 +333,12 @@ export default function DashboardPage() {
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date());
+  const selectedWorkouts = selectedDateKey
+    ? workouts.filter((workout) => toDateKeyUTC(new Date(workout.date)) === selectedDateKey)
+    : [];
+  const selectedSports = selectedDateKey
+    ? sessions.filter((session) => toDateKeyUTC(new Date(session.date)) === selectedDateKey)
+    : [];
 
   async function handleRestDayToggle() {
     setIsRestDayUpdating(true);
@@ -361,9 +386,40 @@ export default function DashboardPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={toggleDarkMode}
-              className="rounded-full border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500"
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              className="rounded-full border border-slate-300 dark:border-slate-600 p-2 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500"
             >
-              {isDark ? "Light Mode" : "Dark Mode"}
+              {isDark ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="h-6 w-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="h-6 w-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"
+                  />
+                </svg>
+              )}
             </button>
             <Link
               href="/history"
@@ -431,12 +487,14 @@ export default function DashboardPage() {
             <div className="grid grid-cols-7 gap-1.5">
               {heatmapDays.map((day, index) =>
                 day ? (
-                  <div
+                  <button
                     key={day.key}
                     title={`${day.key}: ${day.minutes} min${
                       day.workouts.length ? `\nWorkouts: ${day.workouts.join(", ")}` : ""
                     }${day.sports.length ? `\nSports: ${day.sports.join(", ")}` : ""}`}
                     className={`h-3 w-3 rounded ${heatClass(day)}`}
+                    onClick={() => setSelectedDateKey(day.key)}
+                    aria-label={`Show activity for ${day.key}`}
                   />
                 ) : (
                   <div key={`blank-${index}`} className="h-3 w-3 rounded bg-transparent" />
@@ -485,7 +543,12 @@ export default function DashboardPage() {
             <p className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Most Recent Sports Session
             </p>
-            <SportList sessions={sessions.slice(0, 1)} isLoading={isSportsLoading} error={sportsError} />
+            <SportList
+              sessions={sessions.slice(0, 1)}
+              isLoading={isSportsLoading}
+              error={sportsError}
+              onEdit={handleSportEdit}
+            />
           </div>
         </div>
       </div>
@@ -523,17 +586,120 @@ export default function DashboardPage() {
           <div className="w-full max-w-2xl rounded-3xl bg-white dark:bg-gray-800 p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                Add sports session
+                {editingSession ? "Edit sports session" : "Add sports session"}
               </h2>
               <button
-                onClick={() => setIsSportModalOpen(false)}
+                onClick={() => {
+                  setIsSportModalOpen(false);
+                  handleSportCancelEdit();
+                }}
                 className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
               >
                 Close
               </button>
             </div>
             <div className="mt-4">
-              <SportForm onCreated={handleSportCreated} />
+              <SportForm
+                onCreated={handleSportCreated}
+                onUpdated={handleSportUpdated}
+                editingSession={editingSession}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {selectedDateKey ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-slate-900/60 p-4"
+          onClick={() => setSelectedDateKey(null)}
+        >
+          <div
+            className="w-full max-w-lg rounded-3xl bg-white dark:bg-gray-800 p-6 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  Activity Details
+                </h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  {selectedDateKey}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-5">
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Exercises
+                </h3>
+                {selectedWorkouts.length === 0 ? (
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                    No workouts logged.
+                  </p>
+                ) : (
+                  <div className="mt-2 space-y-3 text-sm text-slate-700 dark:text-slate-200">
+                    {selectedWorkouts.map((workout) => (
+                      <div
+                        key={workout.id}
+                        className="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2"
+                      >
+                        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                          {workout.title}
+                        </div>
+                        {workout.exercises.length === 0 ? (
+                          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                            No exercises listed.
+                          </p>
+                        ) : (
+                          <ul className="mt-2 space-y-1">
+                            {workout.exercises.map((exercise) => (
+                              <li key={exercise.id}>
+                                <span className="font-medium text-slate-900 dark:text-white">
+                                  {exercise.name}
+                                </span>
+                                {exercise.sets != null && exercise.reps != null
+                                  ? ` · ${exercise.sets} x ${exercise.reps}`
+                                  : ""}
+                                {exercise.weight != null ? ` @ ${exercise.weight}` : ""}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Sports
+                </h3>
+                {selectedSports.length === 0 ? (
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                    No sports sessions logged.
+                  </p>
+                ) : (
+                  <ul className="mt-2 space-y-2 text-sm text-slate-700 dark:text-slate-200">
+                    {selectedSports.map((session) => (
+                      <li
+                        key={session.id}
+                        className="rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2"
+                      >
+                        <div className="font-semibold text-slate-900 dark:text-white">
+                          {session.title}
+                        </div>
+                        <div className="text-xs text-slate-600 dark:text-slate-400">
+                          {session.intensity.toLowerCase()}
+                          {session.duration != null ? ` · ${session.duration} min` : ""}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
         </div>
